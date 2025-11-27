@@ -21,7 +21,6 @@ import {
   Coins
 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { supabase } from "@/lib/supabase";
 import type { Prize, Coupon, User } from "@shared/schema";
 
 export default function Home() {
@@ -151,7 +150,7 @@ export default function Home() {
               size="icon"
               onClick={async () => {
                 try {
-                  await supabase.auth.signOut();
+                  await fetch("/api/logout", { method: "POST" });
                   window.location.href = "/login";
                 } catch (error) {
                   console.error("Logout failed:", error);

@@ -1,6 +1,6 @@
 import type { Express, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { storage } from "./supabaseStorage";
 import { setupSupabaseAuth, isSupabaseAuthenticated } from "./supabaseAuth";
 import { insertPrizeSchema, insertProductSchema, insertLoanRequestSchema, insertOrderSchema } from "@shared/schema";
 
@@ -173,7 +173,7 @@ export async function registerRoutes(
   app.get("/api/coupons/user", isSupabaseAuthenticated, async (req, res) => {
     try {
       const claims = getAuthUser(req);
-      const coupons = await storage.getUserCoupons(claims.sub);
+      const coupons = await storage.getUserCoupons(claims.id);
       res.json(coupons);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -263,7 +263,7 @@ export async function registerRoutes(
   app.get("/api/orders/user", isSupabaseAuthenticated, async (req, res) => {
     try {
       const claims = getAuthUser(req);
-      const orders = await storage.getUserOrders(claims.sub);
+      const orders = await storage.getUserOrders(claims.id);
       res.json(orders);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -289,7 +289,7 @@ export async function registerRoutes(
   app.get("/api/loan-requests/user", isSupabaseAuthenticated, async (req, res) => {
     try {
       const claims = getAuthUser(req);
-      const requests = await storage.getUserLoanRequests(claims.sub);
+      const requests = await storage.getUserLoanRequests(claims.id);
       res.json(requests);
     } catch (error: any) {
       res.status(500).json({ message: error.message });

@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Coins, Sparkles, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/lib/supabase";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
@@ -17,65 +17,52 @@ export default function Login() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [error, setError] = useState("");
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [isSignup, setIsSignup] = useState(false);
   const navigate = () => window.location.href = "/";
   const { toast } = useToast();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
 
     try {
-      if (isSignUp) {
-        // Sign up
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              first_name: firstName,
-              last_name: lastName,
-            },
-          },
-        });
+      const endpoint = isSignup ? "/api/signup" : "/api/login";
+      const body = isSignup
+        ? { email, password, firstName, lastName }
+        : { email, password };
 
-        if (error) {
-          setError(error.message);
-          return;
-        }
+      const response = await apiRequest("POST", endpoint, body);
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        setError(errorData.message || `${isSignup ? 'Signup' : 'Login'} failed`);
+        return;
+      }
+
+      const data = await response.json();
+
+      if (isSignup) {
         toast({
-          title: "Sign up successful!",
-          description: "Please check your email to verify your account.",
+          title: "Account created!",
+          description: data.message || "Please check your email to verify your account.",
         });
-        setIsSignUp(false);
+        setIsSignup(false);
       } else {
-        // Sign in
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (error) {
-          setError(error.message);
-          return;
-        }
-
         toast({
           title: "Welcome back!",
-          description: `Logged in successfully`,
+          description: `Logged in as ${data.user.firstName}`,
         });
-
-        navigate();
+        navigate("/");
       }
     } catch (error: any) {
-      setError(error.message || "Authentication failed");
+      setError(error.message || `${isSignup ? 'Signup' : 'Login'} failed`);
     } finally {
       setIsLoading(false);
     }
   };
 
+  
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       {/* Background with gradient overlay */}
@@ -107,18 +94,18 @@ export default function Login() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="signin" className="w-full">
+            <Tabs value={isSignup ? "signup" : "login"} onValueChange={(value) => setIsSignup(value === "signup")} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="signin">Sign In</TabsTrigger>
+                <TabsTrigger value="login">Login</TabsTrigger>
                 <TabsTrigger value="signup">Sign Up</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="signin">
-                <form onSubmit={handleLogin} className="space-y-4">
+              <TabsContent value="login">
+                <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signin-email">Email</Label>
+                    <Label htmlFor="email">Email</Label>
                     <Input
-                      id="signin-email"
+                      id="email"
                       type="email"
                       placeholder="Enter your email"
                       value={email}
@@ -127,9 +114,9 @@ export default function Login() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signin-password">Password</Label>
+                    <Label htmlFor="password">Password</Label>
                     <Input
-                      id="signin-password"
+                      id="password"
                       type="password"
                       placeholder="Enter your password"
                       value={password}
@@ -150,39 +137,38 @@ export default function Login() {
                     {isLoading ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Signing in...
+                        Logging in...
                       </>
                     ) : (
-                      "Sign In"
+                      "Login"
                     )}
                   </Button>
                 </form>
               </TabsContent>
 
               <TabsContent value="signup">
-                <form onSubmit={(e) => {
-                  setIsSignUp(true);
-                  handleLogin(e);
-                }} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="signup-firstname">First Name</Label>
+                      <Label htmlFor="firstName">First Name</Label>
                       <Input
-                        id="signup-firstname"
+                        id="firstName"
                         type="text"
                         placeholder="First name"
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
+                        required
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="signup-lastname">Last Name</Label>
+                      <Label htmlFor="lastName">Last Name</Label>
                       <Input
-                        id="signup-lastname"
+                        id="lastName"
                         type="text"
                         placeholder="Last name"
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
+                        required
                       />
                     </div>
                   </div>
@@ -206,7 +192,6 @@ export default function Login() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
-                      minLength={6}
                     />
                   </div>
                   {error && (
@@ -225,21 +210,14 @@ export default function Login() {
                         Creating account...
                       </>
                     ) : (
-                      "Create Account"
+                      "Sign Up"
                     )}
                   </Button>
                 </form>
               </TabsContent>
             </Tabs>
 
-            {/* Info */}
-            <div className="mt-6 pt-6 border-t">
-              <div className="text-center text-sm text-muted-foreground">
-                <p>Sign up to spin the wheel and win real gold & silver prizes!</p>
-                <p className="mt-2">Your account will be created with Supabase authentication.</p>
-              </div>
-            </div>
-          </CardContent>
+                      </CardContent>
         </Card>
       </div>
     </div>
