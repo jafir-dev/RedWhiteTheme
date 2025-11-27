@@ -86,13 +86,20 @@ async function setupServer() {
 // For Vercel serverless deployment
 let serverInstance: { app: Express; httpServer: any } | null = null;
 
-export default async function handler(req: Request, res: Response) {
-  if (!serverInstance) {
-    serverInstance = await setupServer();
-  }
+export default async function handler(req: any, res: any) {
+  try {
+    if (!serverInstance) {
+      serverInstance = await setupServer();
+    }
 
-  // Handle the request through Express
-  serverInstance.app(req, res);
+    // Handle the request through Express
+    serverInstance.app(req, res);
+  } catch (error) {
+    console.error('Handler error:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Internal Server Error', message: error.message });
+    }
+  }
 }
 
 // For local development
