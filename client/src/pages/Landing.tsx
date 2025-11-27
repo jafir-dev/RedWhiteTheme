@@ -32,7 +32,7 @@ export default function Landing() {
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Button size="lg" className="text-lg px-8 py-6" asChild>
-              <a href="/api/login" data-testid="button-login-hero">
+              <a href="/login" data-testid="button-login-hero">
                 Start Spinning Now
                 <ChevronRight className="w-5 h-5 ml-2" />
               </a>
@@ -182,13 +182,13 @@ export default function Landing() {
           <p className="text-primary-foreground/80 text-lg mb-8 max-w-xl mx-auto">
             Join thousands of lucky winners. Sign up now and start your fortune wheel journey!
           </p>
-          <Button 
-            size="lg" 
-            variant="secondary" 
+          <Button
+            size="lg"
+            variant="secondary"
             className="text-lg px-8 py-6"
             asChild
           >
-            <a href="/api/login" data-testid="button-login-cta">
+            <a href="/login" data-testid="button-login-cta">
               Get Started for Rs 10
               <ChevronRight className="w-5 h-5 ml-2" />
             </a>
@@ -201,8 +201,7 @@ export default function Landing() {
         <div className="container mx-auto max-w-6xl">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-2">
-              <Coins className="w-6 h-6 text-primary" />
-              <span className="font-display font-bold text-xl">GPT</span>
+              <img src="/gptlogo.jpg" alt="GPT Logo" className="w-6 h-6 rounded" />
             </div>
             <div className="flex items-center gap-6 text-sm text-muted-foreground">
               <span>Secure Payments</span>

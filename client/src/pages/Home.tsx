@@ -110,8 +110,7 @@ export default function Home() {
       <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-6 h-16 flex items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2">
-            <Coins className="w-6 h-6 text-primary" />
-            <span className="font-display font-bold text-xl">GPT</span>
+            <img src="/gptlogo.jpg" alt="GPT Logo" className="w-8 h-8 rounded" />
           </Link>
           
           <nav className="hidden md:flex items-center gap-6">
@@ -146,10 +145,19 @@ export default function Home() {
                 {user?.firstName || user?.email || "User"}
               </span>
             </div>
-            <Button variant="ghost" size="icon" asChild>
-              <a href="/api/logout" data-testid="button-logout">
-                <LogOut className="w-4 h-4" />
-              </a>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={async () => {
+                try {
+                  await fetch("/api/logout", { method: "POST" });
+                  window.location.href = "/login";
+                } catch (error) {
+                  console.error("Logout failed:", error);
+                }
+              }}
+            >
+              <LogOut className="w-4 h-4" />
             </Button>
           </div>
         </div>
