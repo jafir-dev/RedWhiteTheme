@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { supabase } from "./lib/supabase";
-import { storage } from "./storage";
+import { storage } from "./supabaseStorage";
 
 export function setupSupabaseAuth(app: any) {
   // Login endpoint - Supabase handles this on client side, but we provide user info

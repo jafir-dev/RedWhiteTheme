@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Coins, Sparkles, Shield } from "lucide-react";
+import { Loader2, Coins, Sparkles, Shield, UserPlus, LogIn } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -14,10 +14,12 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
   const [error, setError] = useState("");
   const navigate = () => window.location.href = "/";
   const { toast } = useToast();
-  const { signIn } = useAuth();
+  const { signIn, signUp } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,6 +42,51 @@ export default function Login() {
       navigate("/");
     } catch (error: any) {
       setError(error.message || "Login failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      setIsLoading(false);
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const { error } = await signUp(email, password, {
+        first_name: firstName,
+        name: firstName,
+      });
+
+      if (error) {
+        setError(error.message || "Sign up failed");
+        return;
+      }
+
+      toast({
+        title: "Account created!",
+        description: "Please check your email to confirm your account.",
+      });
+
+      // Clear form
+      setFirstName("");
+      setPassword("");
+      setConfirmPassword("");
+      setEmail("");
+    } catch (error: any) {
+      setError(error.message || "Sign up failed");
     } finally {
       setIsLoading(false);
     }
@@ -70,24 +117,30 @@ export default function Login() {
         {/* Login Form */}
         <Card className="shadow-lg">
           <CardHeader className="text-center pb-4">
-            <CardTitle className="font-display text-xl">Login to Your Account</CardTitle>
+            <CardTitle className="font-display text-xl">Welcome to GPT</CardTitle>
             <CardDescription>
-              Enter your credentials to access your account
+              Login or create an account to start spinning and winning!
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="user" className="w-full">
+            <Tabs defaultValue="login" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="user">User Login</TabsTrigger>
-                <TabsTrigger value="admin">Admin Login</TabsTrigger>
+                <TabsTrigger value="login" className="flex items-center gap-2">
+                  <LogIn className="w-4 h-4" />
+                  Login
+                </TabsTrigger>
+                <TabsTrigger value="signup" className="flex items-center gap-2">
+                  <UserPlus className="w-4 h-4" />
+                  Sign Up
+                </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="user">
+              <TabsContent value="login">
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="login-email">Email</Label>
                     <Input
-                      id="email"
+                      id="login-email"
                       type="email"
                       placeholder="Enter your email"
                       value={email}
@@ -96,9 +149,9 @@ export default function Login() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="login-password">Password</Label>
                     <Input
-                      id="password"
+                      id="login-password"
                       type="password"
                       placeholder="Enter your password"
                       value={password}
@@ -128,67 +181,78 @@ export default function Login() {
                 </form>
               </TabsContent>
 
-              <TabsContent value="admin">
-                <div className="space-y-4">
-                  <Alert>
-                    <Shield className="h-4 w-4" />
-                    <AlertDescription>
-                      Use admin credentials to access the admin dashboard
-                    </AlertDescription>
-                  </Alert>
-                  <form onSubmit={handleLogin} className="space-y-4">
+              <TabsContent value="signup">
+                <form onSubmit={handleSignUp} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="admin-email">Email</Label>
+                      <Label htmlFor="signup-name">First Name</Label>
                       <Input
-                        id="admin-email"
+                        id="signup-name"
+                        type="text"
+                        placeholder="Enter your first name"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-email">Email</Label>
+                      <Input
+                        id="signup-email"
                         type="email"
-                        placeholder="admin@gpt.com"
+                        placeholder="Enter your email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="admin-password">Password</Label>
-                      <Input
-                        id="admin-password"
-                        type="password"
-                        placeholder="admin123"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                      />
-                    </div>
-                    {error && (
-                      <Alert variant="destructive">
-                        <AlertDescription>{error}</AlertDescription>
-                      </Alert>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password">Password</Label>
+                    <Input
+                      id="signup-password"
+                      type="password"
+                      placeholder="Create a password (min. 6 characters)"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      minLength={6}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-confirm">Confirm Password</Label>
+                    <Input
+                      id="signup-confirm"
+                      type="password"
+                      placeholder="Confirm your password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      minLength={6}
+                    />
+                  </div>
+                  {error && (
+                    <Alert variant="destructive">
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Creating Account...
+                      </>
+                    ) : (
+                      "Sign Up"
                     )}
-                    <Button
-                      type="submit"
-                      className="w-full"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Logging in...
-                        </>
-                      ) : (
-                        "Admin Login"
-                      )}
-                    </Button>
-                  </form>
-                </div>
+                  </Button>
+                </form>
               </TabsContent>
             </Tabs>
-
-            {/* Sign up link */}
-            <div className="mt-6 pt-6 border-t text-center">
-              <p className="text-sm text-muted-foreground">
-                Don't have an account? Sign up to start spinning!
-              </p>
-            </div>
           </CardContent>
         </Card>
       </div>
