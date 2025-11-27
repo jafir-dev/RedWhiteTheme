@@ -18,7 +18,8 @@
       "Bash(npm run db:push:*)",
       "Bash(PORT=3000 npm run dev:*)",
       "Bash(npm run vercel-build:*)",
-      "Bash(PORT=5001 npm run dev:*)"
+      "Bash(PORT=5001 npm run dev:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []

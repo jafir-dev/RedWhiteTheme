@@ -88,9 +88,8 @@ export default function Home() {
     }
   };
 
-  const handleBuySpins = () => {
-    // No-op - feature disabled per user request
-    return;
+  const handleBuySpins = async () => {
+    await buySpinsMutation.mutateAsync();
   };
 
   if (authLoading || userLoading) {

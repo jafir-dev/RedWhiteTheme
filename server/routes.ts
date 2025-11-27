@@ -65,6 +65,230 @@ export async function registerRoutes(
     }
   });
 
+  // Prize seeding endpoint
+  app.post("/api/prizes/seed", async (req, res) => {
+    try {
+      // Check if prizes already exist
+      const existingPrizes = await storage.getAllPrizes();
+      if (existingPrizes.length > 0) {
+        return res.json({ message: "Prizes already exist", count: existingPrizes.length });
+      }
+
+      const samplePrizes = [
+        {
+          name: "Gold 1 Gram",
+          description: "Win 1 gram of pure 24K gold",
+          type: "free_gold",
+          value: 500,
+          goldGrams: 1.0,
+          silverGrams: 0,
+          probability: 5, // 5% chance
+          color: "#DC2626",
+          isActive: true
+        },
+        {
+          name: "Silver 5 Grams",
+          description: "Win 5 grams of pure silver",
+          type: "free_silver",
+          value: 300,
+          goldGrams: 0,
+          silverGrams: 5.0,
+          probability: 10, // 10% chance
+          color: "#991B1B",
+          isActive: true
+        },
+        {
+          name: "Rs 100 Off",
+          description: "Get Rs 100 discount on any purchase",
+          type: "discount",
+          value: 100,
+          goldGrams: 0,
+          silverGrams: 0,
+          probability: 25, // 25% chance
+          color: "#FFFFFF",
+          isActive: true
+        },
+        {
+          name: "Rs 50 Off",
+          description: "Get Rs 50 discount on any purchase",
+          type: "discount",
+          value: 50,
+          goldGrams: 0,
+          silverGrams: 0,
+          probability: 20, // 20% chance
+          color: "#FEE2E2",
+          isActive: true
+        },
+        {
+          name: "Gold 0.5 Gram",
+          description: "Win 0.5 gram of pure 24K gold",
+          type: "free_gold",
+          value: 250,
+          goldGrams: 0.5,
+          silverGrams: 0,
+          probability: 8, // 8% chance
+          color: "#B91C1C",
+          isActive: true
+        },
+        {
+          name: "Silver 2 Grams",
+          description: "Win 2 grams of pure silver",
+          type: "free_silver",
+          value: 120,
+          goldGrams: 0,
+          silverGrams: 2.0,
+          probability: 15, // 15% chance
+          color: "#FECACA",
+          isActive: true
+        },
+        {
+          name: "Rs 200 Off",
+          description: "Get Rs 200 discount on gold items",
+          type: "combo",
+          value: 200,
+          goldGrams: 0,
+          silverGrams: 0,
+          probability: 3, // 3% chance
+          color: "#7F1D1D",
+          isActive: true
+        },
+        {
+          name: "Rs 25 Off",
+          description: "Get Rs 25 discount on any purchase",
+          type: "discount",
+          value: 25,
+          goldGrams: 0,
+          silverGrams: 0,
+          probability: 14, // 14% chance
+          color: "#FEF2F2",
+          isActive: true
+        }
+      ];
+
+      const createdPrizes = [];
+      for (const prize of samplePrizes) {
+        const created = await storage.createPrize(prize);
+        createdPrizes.push(created);
+      }
+
+      res.json({
+        message: "Sample prizes created successfully",
+        count: createdPrizes.length,
+        prizes: createdPrizes
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Product seeding endpoint
+  app.post("/api/products/seed", async (req, res) => {
+    try {
+      // Check if products already exist
+      const existingProducts = await storage.getAllProducts();
+      if (existingProducts.length > 0) {
+        return res.json({ message: "Products already exist", count: existingProducts.length });
+      }
+
+      const sampleProducts = [
+        {
+          name: "24K Gold Coin - 1 Gram",
+          description: "Pure 24 karat gold coin with elegant design, perfect for investment and gifting",
+          category: "gold",
+          pricePerGram: 5500,
+          weightGrams: 1.0,
+          totalPrice: 5500,
+          imageUrl: null,
+          inStock: true
+        },
+        {
+          name: "22K Gold Necklace - 10 Grams",
+          description: "Traditional 22 karat gold necklace with intricate craftsmanship",
+          category: "jewelry",
+          pricePerGram: 5200,
+          weightGrams: 10.0,
+          totalPrice: 52000,
+          imageUrl: null,
+          inStock: true
+        },
+        {
+          name: "24K Gold Bangle - 15 Grams",
+          description: "Elegant gold bangle with modern design, suitable for daily wear",
+          category: "jewelry",
+          pricePerGram: 5400,
+          weightGrams: 15.0,
+          totalPrice: 81000,
+          imageUrl: null,
+          inStock: true
+        },
+        {
+          name: "Silver Coin - 50 Grams",
+          description: "Pure silver coin with antique finish, excellent investment choice",
+          category: "silver",
+          pricePerGram: 75,
+          weightGrams: 50.0,
+          totalPrice: 3750,
+          imageUrl: null,
+          inStock: true
+        },
+        {
+          name: "925 Silver Chain - 25 Grams",
+          description: "Sterling silver chain with durable links and polished finish",
+          category: "jewelry",
+          pricePerGram: 85,
+          weightGrams: 25.0,
+          totalPrice: 2125,
+          imageUrl: null,
+          inStock: true
+        },
+        {
+          name: "24K Gold Ring - 5 Grams",
+          description: "Classic gold ring with comfortable fit and timeless design",
+          category: "jewelry",
+          pricePerGram: 5600,
+          weightGrams: 5.0,
+          totalPrice: 28000,
+          imageUrl: null,
+          inStock: true
+        },
+        {
+          name: "Silver Anklet - 20 Grams",
+          description: "Traditional silver anklet with beautiful patterns",
+          category: "jewelry",
+          pricePerGram: 80,
+          weightGrams: 20.0,
+          totalPrice: 1600,
+          imageUrl: null,
+          inStock: true
+        },
+        {
+          name: "24K Gold Bar - 50 Grams",
+          description: "Investment grade gold bar with purity certification",
+          category: "gold",
+          pricePerGram: 5450,
+          weightGrams: 50.0,
+          totalPrice: 272500,
+          imageUrl: null,
+          inStock: true
+        }
+      ];
+
+      const createdProducts = [];
+      for (const product of sampleProducts) {
+        const created = await storage.createProduct(product);
+        createdProducts.push(created);
+      }
+
+      res.json({
+        message: "Sample products created successfully",
+        count: createdProducts.length,
+        products: createdProducts
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // ============ WHEEL CONFIG ROUTES ============
 
   app.get("/api/wheel/config", async (req, res) => {
@@ -173,7 +397,7 @@ export async function registerRoutes(
   app.get("/api/coupons/user", isSupabaseAuthenticated, async (req, res) => {
     try {
       const claims = getAuthUser(req);
-      const coupons = await storage.getUserCoupons(claims.sub);
+      const coupons = await storage.getUserCoupons(claims.id);
       res.json(coupons);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
