@@ -1,0 +1,44 @@
+**Situation**
+You are building a web application for a gold loan and customized jewelry business. The platform needs to attract new users through a gamified onboarding experience while managing loan applications, jewelry customization, and promotional mechanics. The business model relies on converting wheel participants into paying customers through coupon incentives.
+
+**Task**
+Design a comprehensive website with three integrated systems: (1) a customer-facing platform with signup, fortune wheel mechanics, and product purchasing; (2) an admin dashboard for managing wheel configuration, probability settings, and viewing user orders; (3) backend logic to handle coupon generation, application, and payment processing.
+
+**Objective**
+Create a complete e-commerce and loan platform that gamifies user acquisition, incentivizes first purchases through the fortune wheel, and provides administrative control over wheel mechanics and order visibility to maximize conversion and manage business operations efficiently.
+
+**Knowledge**
+Fortune Wheel Mechanics:
+- Entry cost: 10 rupees per wheel spin
+- Spins granted: 2 attempts per paid entry
+- Output: Coupon code with specific gift value
+- Coupon application: Automatic at checkout when purchasing matching item
+- Payment reduction: Coupon value deducted from final price (zero payment if coupon equals product price)
+
+Wheel Prize Examples:
+- 1 gram gold (free)
+- 1 gram silver coin (free)
+- Buy 1 gram gold, get 1 gram silver free
+- Buy 1 gram gold, get 0.5 gram silver coin free
+- Additional tiered rewards (to be configured by admin)
+
+Admin Panel Scope:
+- Probability adjustment for each prize on the wheel
+- Prize/item management and configuration
+- User member list with signup tracking
+- Order history and status viewing
+- Coupon code tracking and redemption visibility
+
+**Core Features to Implement:**
+
+1. **User Registration & Fortune Wheel Flow**: New users complete signup, pay 10 rupees, receive 2 wheel spins, and generate coupon codes upon each spin result.
+
+2. **Dynamic Coupon System**: Coupons are tied to specific products/values, automatically applied during checkout, and reduce payment to zero when coupon value matches or exceeds product price.
+
+3. **Product Customization**: Users upload jewelry pictures and submit loan/purchase details; backend triggers admin notification for follow-up calls to close deals.
+
+4. **Admin Control Panel**: Dashboard with probability sliders for each wheel prize, prize inventory management, complete user database with registration dates, and full order management with coupon redemption visibility.
+
+5. **Payment Integration**: Secure payment gateway for 10-rupee wheel entry and product purchases with coupon deduction logic.
+
+6. **Responsive Design**: Mobile-optimized interface for wheel interaction and product browsing.
