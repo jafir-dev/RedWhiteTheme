@@ -58,11 +58,22 @@ class SupabaseStorage implements Storage {
     // Check if user exists first to handle new user spin allocation
     const { data: existingUser } = await supabase
       .from('users')
-      .select('id')
+      .select('id, spins_remaining')
       .eq('id', user.id)
       .single();
 
     const isNewUser = !existingUser;
+
+    // For new users, always give 2 free spins
+    // For existing users, preserve their current spins unless explicitly provided
+    let spinsToSet;
+    if (isNewUser) {
+      spinsToSet = 2; // New users get 2 free spins
+    } else if (user.spinsRemaining !== undefined) {
+      spinsToSet = user.spinsRemaining; // Explicit update
+    } else {
+      spinsToSet = existingUser?.spins_remaining || 0; // Preserve existing
+    }
 
     const { error } = await supabase
       .from('users')
@@ -73,8 +84,8 @@ class SupabaseStorage implements Storage {
         last_name: user.lastName,
         profile_image_url: user.profileImageUrl,
         is_admin: user.isAdmin || false,
-        spins_remaining: user.spinsRemaining !== undefined ? user.spinsRemaining : (isNewUser ? 2 : 0),
-        total_spins_used: user.totalSpinsUsed || 0,
+        spins_remaining: spinsToSet,
+        total_spins_used: user.totalSpinsUsed || (isNewUser ? 0 : existingUser?.total_spins_used || 0),
         updated_at: new Date().toISOString()
       });
 

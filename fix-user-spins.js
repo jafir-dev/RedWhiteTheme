@@ -1,0 +1,40 @@
+// Fix user spins script for users who incorrectly got 0 spins
+// Run this SQL in your Supabase SQL Editor to fix affected users
+
+console.log("🔧 User Spins Fix Script");
+console.log("========================");
+console.log();
+console.log("This script fixes the issue where new users got 0 spins instead of 2.");
+console.log();
+console.log("🎯 AFFECTED USERS:");
+console.log("jafir94@gmail.com");
+console.log("jafircq@gmail.com");
+console.log("(And any other new users with 0 spins)");
+console.log();
+console.log("📝 FIX SQL COMMANDS:");
+console.log();
+console.log("-- Fix spins for specific users who should have 2 free spins");
+console.log("UPDATE users SET spins_remaining = 2 WHERE email IN ('jafir94@gmail.com', 'jafircq@gmail.com') AND spins_remaining = 0;");
+console.log();
+console.log("-- Fix all users who have 0 spins but should have 2 (for new users)");
+console.log("UPDATE users SET spins_remaining = 2 WHERE spins_remaining = 0 AND total_spins_used = 0 AND created_at > NOW() - INTERVAL '7 days';");
+console.log();
+console.log("-- Alternative: Fix all users with 0 spins who have never used any spins");
+console.log("UPDATE users SET spins_remaining = 2 WHERE spins_remaining = 0 AND total_spins_used = 0;");
+console.log();
+console.log("🔍 VERIFICATION QUERIES:");
+console.log();
+console.log("-- Check current spin status of affected users");
+console.log("SELECT email, spins_remaining, total_spins_used, created_at FROM users WHERE email IN ('jafir94@gmail.com', 'jafircq@gmail.com');");
+console.log();
+console.log("-- Check all users with 0 spins");
+console.log("SELECT email, spins_remaining, total_spins_used, created_at FROM users WHERE spins_remaining = 0 ORDER BY created_at DESC;");
+console.log();
+console.log("⚠️  ROOT CAUSE:");
+console.log("The upsertUser method was not properly handling new user spin allocation.");
+console.log("When spinsRemaining was undefined (during auth), new users got 0 instead of 2.");
+console.log();
+console.log("✅ SOLUTION:");
+console.log("1. Run the SQL commands above to fix existing users");
+console.log("2. Deploy the updated server code with the fixed upsertUser method");
+console.log("3. New users will now correctly get 2 free spins on signup");
