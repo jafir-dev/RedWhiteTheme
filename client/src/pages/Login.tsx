@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,14 +8,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Coins, Sparkles, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { supabase } from "@/lib/supabase";
 
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [error, setError] = useState("");
-  const [, setLocation] = useLocation();
+  const [isSignUp, setIsSignUp] = useState(false);
+  const navigate = () => window.location.href = "/";
   const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -24,31 +27,50 @@ export default function Login() {
     setError("");
 
     try {
-      const response = await apiRequest("POST", "/api/login", {
-        email,
-        password
-      });
+      if (isSignUp) {
+        // Sign up
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              first_name: firstName,
+              last_name: lastName,
+            },
+          },
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        setError(errorData.message || "Login failed");
-        return;
+        if (error) {
+          setError(error.message);
+          return;
+        }
+
+        toast({
+          title: "Sign up successful!",
+          description: "Please check your email to verify your account.",
+        });
+        setIsSignUp(false);
+      } else {
+        // Sign in
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) {
+          setError(error.message);
+          return;
+        }
+
+        toast({
+          title: "Welcome back!",
+          description: `Logged in successfully`,
+        });
+
+        navigate();
       }
-
-      const data = await response.json();
-
-      toast({
-        title: "Welcome back!",
-        description: `Logged in as ${data.user.firstName}`,
-      });
-
-      // Invalidate auth query to force refetch
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-
-      // Navigate to dashboard after a small delay to ensure cache update
-      setTimeout(() => setLocation("/"), 100);
     } catch (error: any) {
-      setError(error.message || "Login failed");
+      setError(error.message || "Authentication failed");
     } finally {
       setIsLoading(false);
     }
@@ -85,18 +107,18 @@ export default function Login() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="user" className="w-full">
+            <Tabs defaultValue="signin" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="user">User Login</TabsTrigger>
-                <TabsTrigger value="admin">Admin Login</TabsTrigger>
+                <TabsTrigger value="signin">Sign In</TabsTrigger>
+                <TabsTrigger value="signup">Sign Up</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="user">
+              <TabsContent value="signin">
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="signin-email">Email</Label>
                     <Input
-                      id="email"
+                      id="signin-email"
                       type="email"
                       placeholder="Enter your email"
                       value={email}
@@ -105,9 +127,9 @@ export default function Login() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="signin-password">Password</Label>
                     <Input
-                      id="password"
+                      id="signin-password"
                       type="password"
                       placeholder="Enter your password"
                       value={password}
@@ -128,82 +150,93 @@ export default function Login() {
                     {isLoading ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Logging in...
+                        Signing in...
                       </>
                     ) : (
-                      "Login"
+                      "Sign In"
                     )}
                   </Button>
                 </form>
               </TabsContent>
 
-              <TabsContent value="admin">
-                <div className="space-y-4">
-                  <Alert>
-                    <Shield className="h-4 w-4" />
-                    <AlertDescription>
-                      Use admin credentials to access the admin dashboard
-                    </AlertDescription>
-                  </Alert>
-                  <form onSubmit={handleLogin} className="space-y-4">
+              <TabsContent value="signup">
+                <form onSubmit={(e) => {
+                  setIsSignUp(true);
+                  handleLogin(e);
+                }} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="admin-email">Email</Label>
+                      <Label htmlFor="signup-firstname">First Name</Label>
                       <Input
-                        id="admin-email"
-                        type="email"
-                        placeholder="admin@gpt.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
+                        id="signup-firstname"
+                        type="text"
+                        placeholder="First name"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="admin-password">Password</Label>
+                      <Label htmlFor="signup-lastname">Last Name</Label>
                       <Input
-                        id="admin-password"
-                        type="password"
-                        placeholder="admin123"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
+                        id="signup-lastname"
+                        type="text"
+                        placeholder="Last name"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
                       />
                     </div>
-                    {error && (
-                      <Alert variant="destructive">
-                        <AlertDescription>{error}</AlertDescription>
-                      </Alert>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email">Email</Label>
+                    <Input
+                      id="signup-email"
+                      type="email"
+                      placeholder="Enter your email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password">Password</Label>
+                    <Input
+                      id="signup-password"
+                      type="password"
+                      placeholder="Create a password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      minLength={6}
+                    />
+                  </div>
+                  {error && (
+                    <Alert variant="destructive">
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Creating account...
+                      </>
+                    ) : (
+                      "Create Account"
                     )}
-                    <Button
-                      type="submit"
-                      className="w-full"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Logging in...
-                        </>
-                      ) : (
-                        "Admin Login"
-                      )}
-                    </Button>
-                  </form>
-                </div>
+                  </Button>
+                </form>
               </TabsContent>
             </Tabs>
 
-            {/* Demo Credentials */}
+            {/* Info */}
             <div className="mt-6 pt-6 border-t">
-              <p className="text-center text-sm text-muted-foreground mb-3">
-                Demo Credentials
-              </p>
-              <div className="space-y-2 text-xs">
-                <div className="p-2 bg-muted rounded">
-                  <span className="font-medium">User:</span> user@gpt.com / user123
-                </div>
-                <div className="p-2 bg-muted rounded">
-                  <span className="font-medium">Admin:</span> admin@gpt.com / admin123
-                </div>
+              <div className="text-center text-sm text-muted-foreground">
+                <p>Sign up to spin the wheel and win real gold & silver prizes!</p>
+                <p className="mt-2">Your account will be created with Supabase authentication.</p>
               </div>
             </div>
           </CardContent>

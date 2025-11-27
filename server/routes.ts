@@ -1,7 +1,7 @@
 import type { Express, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupMockAuth, isMockAuthenticated } from "./mockAuth";
+import { setupSupabaseAuth, isSupabaseAuthenticated } from "./supabaseAuth";
 import { insertPrizeSchema, insertProductSchema, insertLoanRequestSchema, insertOrderSchema } from "@shared/schema";
 
 // Generate a random coupon code
@@ -40,10 +40,10 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
   
-  // Setup Mock Auth
-  setupMockAuth(app);
+  // Setup Supabase Auth
+  setupSupabaseAuth(app);
 
-  // ============ AUTH ROUTES ARE NOW IN mockAuth.ts ============
+  // ============ AUTH ROUTES ARE NOW IN supabaseAuth.ts ============
 
   // ============ PRIZE ROUTES ============
 
@@ -81,7 +81,7 @@ export async function registerRoutes(
 
   // ============ WHEEL SPIN ROUTES ============
 
-  app.post("/api/wheel/buy-spins", isMockAuthenticated, async (req, res) => {
+  app.post("/api/wheel/buy-spins", isSupabaseAuthenticated, async (req, res) => {
     try {
       const claims = getAuthUser(req);
       const user = await storage.getUser(claims.id);
@@ -109,7 +109,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/wheel/spin", isMockAuthenticated, async (req, res) => {
+  app.post("/api/wheel/spin", isSupabaseAuthenticated, async (req, res) => {
     try {
       const claims = getAuthUser(req);
       const user = await storage.getUser(claims.id);
@@ -170,7 +170,7 @@ export async function registerRoutes(
 
   // ============ COUPON ROUTES ============
 
-  app.get("/api/coupons/user", isMockAuthenticated, async (req, res) => {
+  app.get("/api/coupons/user", isSupabaseAuthenticated, async (req, res) => {
     try {
       const claims = getAuthUser(req);
       const coupons = await storage.getUserCoupons(claims.sub);
@@ -180,7 +180,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/coupons/validate/:code", isMockAuthenticated, async (req, res) => {
+  app.get("/api/coupons/validate/:code", isSupabaseAuthenticated, async (req, res) => {
     try {
       const coupon = await storage.getCouponByCode(req.params.code);
       if (!coupon) {
@@ -223,7 +223,7 @@ export async function registerRoutes(
 
   // ============ ORDER ROUTES ============
 
-  app.post("/api/orders", isMockAuthenticated, async (req, res) => {
+  app.post("/api/orders", isSupabaseAuthenticated, async (req, res) => {
     try {
       const claims = getAuthUser(req);
       const { productId, couponId } = req.body;
@@ -260,7 +260,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/orders/user", isMockAuthenticated, async (req, res) => {
+  app.get("/api/orders/user", isSupabaseAuthenticated, async (req, res) => {
     try {
       const claims = getAuthUser(req);
       const orders = await storage.getUserOrders(claims.sub);
@@ -272,7 +272,7 @@ export async function registerRoutes(
 
   // ============ LOAN REQUEST ROUTES ============
 
-  app.post("/api/loan-requests", isMockAuthenticated, async (req, res) => {
+  app.post("/api/loan-requests", isSupabaseAuthenticated, async (req, res) => {
     try {
       const claims = getAuthUser(req);
       const validated = insertLoanRequestSchema.parse({
@@ -286,7 +286,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/loan-requests/user", isMockAuthenticated, async (req, res) => {
+  app.get("/api/loan-requests/user", isSupabaseAuthenticated, async (req, res) => {
     try {
       const claims = getAuthUser(req);
       const requests = await storage.getUserLoanRequests(claims.sub);
@@ -312,7 +312,7 @@ export async function registerRoutes(
   };
 
   // Admin Users
-  app.get("/api/admin/users", isMockAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/users", isSupabaseAuthenticated, isAdmin, async (req, res) => {
     try {
       const users = await storage.getAllUsers();
       res.json(users);
@@ -322,7 +322,7 @@ export async function registerRoutes(
   });
 
   // Admin Prizes
-  app.post("/api/admin/prizes", isMockAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/prizes", isSupabaseAuthenticated, isAdmin, async (req, res) => {
     try {
       const validated = insertPrizeSchema.parse(req.body);
       const prize = await storage.createPrize(validated);
@@ -332,7 +332,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/admin/prizes/:id", isMockAuthenticated, isAdmin, async (req, res) => {
+  app.patch("/api/admin/prizes/:id", isSupabaseAuthenticated, isAdmin, async (req, res) => {
     try {
       const prize = await storage.updatePrize(parseInt(req.params.id), req.body);
       res.json(prize);
@@ -341,7 +341,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete("/api/admin/prizes/:id", isMockAuthenticated, isAdmin, async (req, res) => {
+  app.delete("/api/admin/prizes/:id", isSupabaseAuthenticated, isAdmin, async (req, res) => {
     try {
       await storage.deletePrize(parseInt(req.params.id));
       res.json({ success: true });
@@ -351,7 +351,7 @@ export async function registerRoutes(
   });
 
   // Admin Products
-  app.post("/api/admin/products", isMockAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/admin/products", isSupabaseAuthenticated, isAdmin, async (req, res) => {
     try {
       const validated = insertProductSchema.parse(req.body);
       const product = await storage.createProduct(validated);
@@ -361,7 +361,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/admin/products/:id", isMockAuthenticated, isAdmin, async (req, res) => {
+  app.patch("/api/admin/products/:id", isSupabaseAuthenticated, isAdmin, async (req, res) => {
     try {
       const product = await storage.updateProduct(parseInt(req.params.id), req.body);
       res.json(product);
@@ -370,7 +370,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete("/api/admin/products/:id", isMockAuthenticated, isAdmin, async (req, res) => {
+  app.delete("/api/admin/products/:id", isSupabaseAuthenticated, isAdmin, async (req, res) => {
     try {
       await storage.deleteProduct(parseInt(req.params.id));
       res.json({ success: true });
@@ -380,7 +380,7 @@ export async function registerRoutes(
   });
 
   // Admin Orders
-  app.get("/api/admin/orders", isMockAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/orders", isSupabaseAuthenticated, isAdmin, async (req, res) => {
     try {
       const orders = await storage.getAllOrders();
       res.json(orders);
@@ -389,7 +389,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/admin/orders/:id/status", isMockAuthenticated, isAdmin, async (req, res) => {
+  app.patch("/api/admin/orders/:id/status", isSupabaseAuthenticated, isAdmin, async (req, res) => {
     try {
       const order = await storage.updateOrderStatus(parseInt(req.params.id), req.body.status);
       res.json(order);
@@ -399,7 +399,7 @@ export async function registerRoutes(
   });
 
   // Admin Coupons
-  app.get("/api/admin/coupons", isMockAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/coupons", isSupabaseAuthenticated, isAdmin, async (req, res) => {
     try {
       const coupons = await storage.getAllCoupons();
       res.json(coupons);
@@ -409,7 +409,7 @@ export async function registerRoutes(
   });
 
   // Admin Spins
-  app.get("/api/admin/spins", isMockAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/spins", isSupabaseAuthenticated, isAdmin, async (req, res) => {
     try {
       const spins = await storage.getAllSpins();
       res.json(spins);
@@ -419,7 +419,7 @@ export async function registerRoutes(
   });
 
   // Admin Loan Requests
-  app.get("/api/admin/loan-requests", isMockAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/loan-requests", isSupabaseAuthenticated, isAdmin, async (req, res) => {
     try {
       const requests = await storage.getAllLoanRequests();
       res.json(requests);
@@ -428,7 +428,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/admin/loan-requests/:id/status", isMockAuthenticated, isAdmin, async (req, res) => {
+  app.patch("/api/admin/loan-requests/:id/status", isSupabaseAuthenticated, isAdmin, async (req, res) => {
     try {
       const request = await storage.updateLoanRequestStatus(
         parseInt(req.params.id),
@@ -442,7 +442,7 @@ export async function registerRoutes(
   });
 
   // Admin Wheel Config
-  app.patch("/api/admin/wheel/config", isMockAuthenticated, isAdmin, async (req, res) => {
+  app.patch("/api/admin/wheel/config", isSupabaseAuthenticated, isAdmin, async (req, res) => {
     try {
       const config = await storage.updateWheelConfig(req.body);
       res.json(config);
