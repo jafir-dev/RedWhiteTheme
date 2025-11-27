@@ -1,0 +1,40 @@
+// Admin account creation helper
+// This script provides instructions for creating the admin account
+
+console.log("👑 Admin Account Setup Guide");
+console.log("===========================");
+console.log();
+console.log("📧 Admin Email: admin@gptjewels.com");
+console.log();
+console.log("🔐 Choose ONE of these methods to set the password:");
+console.log();
+console.log("METHOD 1: App Registration (Easiest)");
+console.log("1. Go to your app: https://gptjewels.vercel.app/");
+console.log("2. Click 'Sign Up'");
+console.log("3. Enter: admin@gptjewels.com");
+console.log("4. Enter your desired password");
+console.log("5. Complete signup");
+console.log("6. Account will be created but not admin yet");
+console.log();
+console.log("METHOD 2: Supabase Dashboard");
+console.log("1. Go to: https://supabase.com/dashboard");
+console.log("2. Select your project");
+console.log("3. Go to Authentication → Users");
+console.log("4. Click 'Add user'");
+console.log("5. Email: admin@gptjewels.com");
+console.log("6. Set password and confirm");
+console.log("7. Click 'Save'");
+console.log();
+console.log("⚙️ AFTER ACCOUNT CREATION:");
+console.log("You need to make the account admin by running this SQL:");
+console.log();
+console.log("-- Make user an admin");
+console.log("UPDATE users SET is_admin = true WHERE email = 'admin@gptjewels.com';");
+console.log();
+console.log("-- Give admin free spins");
+console.log("UPDATE users SET spins_remaining = 10, total_spins_used = 0 WHERE email = 'admin@gptjewels.com';");
+console.log();
+console.log("🔑 SUGGESTED PASSWORD:");
+console.log("Admin@123! (or any secure password you prefer)");
+console.log();
+console.log("✅ After these steps, you can login as admin!");
