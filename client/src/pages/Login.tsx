@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "wouter";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,14 +8,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Coins, Sparkles, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const navigate = () => window.location.href = "/";
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -42,7 +42,11 @@ export default function Login() {
         description: `Logged in as ${data.user.firstName}`,
       });
 
-      navigate("/");
+      // Invalidate auth query to force refetch
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+
+      // Navigate to dashboard after a small delay to ensure cache update
+      setTimeout(() => setLocation("/"), 100);
     } catch (error: any) {
       setError(error.message || "Login failed");
     } finally {
