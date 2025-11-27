@@ -3,14 +3,17 @@ import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 
+const app = express();
+const httpServer = createServer(app);
+
+// Export the app for Vercel serverless functions
+export default app;
+
 declare module "http" {
   interface IncomingMessage {
     rawBody: unknown;
   }
 }
-
-const app = express();
-const httpServer = createServer(app);
 
 app.use(
   express.json({
@@ -59,52 +62,26 @@ app.use((req, res, next) => {
   next();
 });
 
-async function setupServer() {
-  await registerRoutes(httpServer, app);
+// Only run the server for local development
+// In production (Vercel), the app is exported and handled as a serverless function
+if (process.env.NODE_ENV !== "production") {
+  (async () => {
+    await registerRoutes(httpServer, app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      const status = err.status || err.statusCode || 500;
+      const message = err.message || "Internal Server Error";
 
-    res.status(status).json({ message });
-    throw err;
-  });
+      res.status(status).json({ message });
+      throw err;
+    });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (process.env.NODE_ENV === "production") {
-    serveStatic(app);
-  } else {
+    // importantly only setup vite in development and after
+    // setting up all the other routes so the catch-all route
+    // doesn't interfere with the other routes
     const { setupVite } = await import("./vite");
     await setupVite(httpServer, app);
-  }
 
-  return { app, httpServer };
-}
-
-// For Vercel serverless deployment
-let serverInstance: { app: Express; httpServer: any } | null = null;
-
-export default async function handler(req: any, res: any) {
-  try {
-    if (!serverInstance) {
-      serverInstance = await setupServer();
-    }
-
-    // Handle the request through Express
-    serverInstance.app(req, res);
-  } catch (error) {
-    console.error('Handler error:', error);
-    if (!res.headersSent) {
-      res.status(500).json({ error: 'Internal Server Error', message: error.message });
-    }
-  }
-}
-
-// For local development
-if (require.main === module) {
-  setupServer().then(() => {
     // ALWAYS serve the app on the port specified in the environment variable PORT
     // Other ports are firewalled. Default to 5000 if not specified.
     // this serves both the API and the client.
@@ -120,5 +97,17 @@ if (require.main === module) {
         log(`serving on port ${port}`);
       },
     );
-  });
+  })();
+} else {
+  // For production, we need to set up routes but not start a server
+  (async () => {
+    await registerRoutes(httpServer, app);
+
+    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      const status = err.status || err.statusCode || 500;
+      const message = err.message || "Internal Server Error";
+
+      res.status(status).json({ message });
+    });
+  })();
 }
