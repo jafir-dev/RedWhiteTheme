@@ -55,6 +55,15 @@ export interface Storage {
 
 class SupabaseStorage implements Storage {
   async upsertUser(user: Partial<User> & { id: string }): Promise<void> {
+    // Check if user exists first to handle new user spin allocation
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('id')
+      .eq('id', user.id)
+      .single();
+
+    const isNewUser = !existingUser;
+
     const { error } = await supabase
       .from('users')
       .upsert({
@@ -64,7 +73,7 @@ class SupabaseStorage implements Storage {
         last_name: user.lastName,
         profile_image_url: user.profileImageUrl,
         is_admin: user.isAdmin || false,
-        spins_remaining: user.spinsRemaining || 0,
+        spins_remaining: user.spinsRemaining !== undefined ? user.spinsRemaining : (isNewUser ? 2 : 0),
         total_spins_used: user.totalSpinsUsed || 0,
         updated_at: new Date().toISOString()
       });
@@ -655,10 +664,12 @@ class SupabaseStorage implements Storage {
       .from('loan_requests')
       .insert({
         user_id: request.userId,
-        product_id: request.productId,
-        amount: request.amount,
-        tenure_months: request.tenureMonths,
-        status: request.status,
+        type: request.type || 'customization',
+        image_url: request.imageUrl,
+        description: request.description,
+        gold_weight_estimate: request.goldWeightEstimate,
+        contact_phone: request.contactPhone,
+        status: request.status || 'pending',
         admin_notes: request.adminNotes
       })
       .select()
@@ -669,9 +680,11 @@ class SupabaseStorage implements Storage {
     return {
       id: data.id,
       userId: data.user_id,
-      productId: data.product_id,
-      amount: data.amount,
-      tenureMonths: data.tenure_months,
+      type: data.type,
+      imageUrl: data.image_url,
+      description: data.description,
+      goldWeightEstimate: data.gold_weight_estimate,
+      contactPhone: data.contact_phone,
       status: data.status,
       adminNotes: data.admin_notes,
       createdAt: new Date(data.created_at)
@@ -690,9 +703,11 @@ class SupabaseStorage implements Storage {
     return data.map(request => ({
       id: request.id,
       userId: request.user_id,
-      productId: request.product_id,
-      amount: request.amount,
-      tenureMonths: request.tenure_months,
+      type: request.type,
+      imageUrl: request.image_url,
+      description: request.description,
+      goldWeightEstimate: request.gold_weight_estimate,
+      contactPhone: request.contact_phone,
       status: request.status,
       adminNotes: request.admin_notes,
       createdAt: new Date(request.created_at)

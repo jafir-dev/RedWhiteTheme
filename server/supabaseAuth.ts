@@ -19,16 +19,14 @@ export function setupSupabaseAuth(app: any) {
         return res.status(401).json({ message: "Invalid token" });
       }
 
-      // Get or create user in our storage with initial spins for new users
+      // Get or create user in our storage - storage will handle new user spin allocation
       await storage.upsertUser({
         id: user.id,
         email: user.email || "",
         firstName: user.user_metadata?.first_name || user.user_metadata?.name || "",
         lastName: user.user_metadata?.last_name || "",
         profileImageUrl: user.user_metadata?.avatar_url || null,
-        isAdmin: user.email?.endsWith("@admin.com") || false,
-        spinsRemaining: 2, // New users get 2 free spins
-        totalSpinsUsed: 0
+        isAdmin: user.email?.endsWith("@admin.com") || false
       });
 
       const storedUser = await storage.getUser(user.id);
