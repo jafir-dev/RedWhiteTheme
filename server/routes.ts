@@ -675,5 +675,35 @@ export async function registerRoutes(
     }
   });
 
+  // Debug test endpoint
+  app.get("/api/test", async (req, res) => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('email, spins_remaining, total_spins_used')
+        .limit(1);
+
+      if (error) {
+        console.error('Database test error:', error);
+        return res.status(500).json({
+          message: 'Database error',
+          error: error.message
+        });
+      }
+
+      res.json({
+        message: 'Database connection working!',
+        data: data,
+        count: data?.length || 0
+      });
+    } catch (err) {
+      console.error('Test endpoint error:', err);
+      res.status(500).json({
+        message: 'Server error',
+        error: err.message
+      });
+    }
+  });
+
   return httpServer;
 }

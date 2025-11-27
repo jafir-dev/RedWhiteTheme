@@ -55,25 +55,24 @@ export interface Storage {
 
 class SupabaseStorage implements Storage {
   async upsertUser(user: Partial<User> & { id: string }): Promise<void> {
-    // Check if user exists first to handle new user spin allocation
+    // Simplified version that won't crash
     const { data: existingUser } = await supabase
       .from('users')
-      .select('id, spins_remaining')
+      .select('id, spins_remaining, total_spins_used')
       .eq('id', user.id)
-      .single();
+      .maybeSingle(); // Use maybeSingle instead of single to avoid crashes
 
     const isNewUser = !existingUser;
 
-    // For new users, always give 2 free spins
-    // For existing users, preserve their current spins unless explicitly provided
-    let spinsToSet;
-    if (isNewUser) {
-      spinsToSet = 2; // New users get 2 free spins
-    } else if (user.spinsRemaining !== undefined) {
-      spinsToSet = user.spinsRemaining; // Explicit update
-    } else {
-      spinsToSet = existingUser?.spins_remaining || 0; // Preserve existing
-    }
+    // Set spins: new users get 2, existing users keep theirs unless specified
+    const spinsToSet = user.spinsRemaining !== undefined
+      ? user.spinsRemaining
+      : (isNewUser ? 2 : (existingUser?.spins_remaining || 0));
+
+    // Set total spins used
+    const totalSpinsToSet = user.totalSpinsUsed !== undefined
+      ? user.totalSpinsUsed
+      : (isNewUser ? 0 : (existingUser?.total_spins_used || 0));
 
     const { error } = await supabase
       .from('users')
@@ -85,7 +84,7 @@ class SupabaseStorage implements Storage {
         profile_image_url: user.profileImageUrl,
         is_admin: user.isAdmin || false,
         spins_remaining: spinsToSet,
-        total_spins_used: user.totalSpinsUsed || (isNewUser ? 0 : existingUser?.total_spins_used || 0),
+        total_spins_used: totalSpinsToSet,
         updated_at: new Date().toISOString()
       });
 
