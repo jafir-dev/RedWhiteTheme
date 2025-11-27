@@ -85,14 +85,9 @@ export default function Home() {
     }
   };
 
-  const handleBuySpins = async () => {
-    // Show payment prompt
-    const confirmed = window.confirm(
-      "Buy 2 Spins for ₹10?\n\n(This is a demo - no real payment required)"
-    );
-    if (confirmed) {
-      await buySpinsMutation.mutateAsync();
-    }
+  const handleBuySpins = () => {
+    // No-op - feature disabled per user request
+    return;
   };
 
   if (authLoading) {
@@ -116,7 +111,7 @@ export default function Home() {
         <div className="container mx-auto px-6 h-16 flex items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2">
             <Coins className="w-6 h-6 text-primary" />
-            <span className="font-display font-bold text-xl">Golden Fortune</span>
+            <span className="font-display font-bold text-xl">GPT</span>
           </Link>
           
           <nav className="hidden md:flex items-center gap-6">
@@ -169,7 +164,7 @@ export default function Home() {
             <span>Welcome back, {user?.firstName || "Champion"}!</span>
           </div>
           <h1 className="font-display text-3xl md:text-4xl font-bold mb-4">
-            Ready to Win Some Gold?
+            Spin and Win with GPT!
           </h1>
           <p className="text-muted-foreground max-w-xl mx-auto">
             Spin the fortune wheel to unlock exclusive coupons and win amazing gold & silver prizes!
@@ -183,7 +178,7 @@ export default function Home() {
               <CardHeader className="text-center">
                 <CardTitle className="font-display text-2xl flex items-center justify-center gap-2">
                   <Sparkles className="w-6 h-6 text-primary" />
-                  Fortune Wheel
+                  GPT Wheel
                 </CardTitle>
                 <CardDescription>
                   Each spin gives you a chance to win gold, silver, and combo offers!

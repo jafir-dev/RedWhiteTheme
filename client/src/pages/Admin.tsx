@@ -129,7 +129,7 @@ export default function Admin({ section = "dashboard" }: AdminPageProps) {
           <SidebarHeader className="border-b p-4">
             <Link href="/" className="flex items-center gap-2">
               <Coins className="w-6 h-6 text-primary" />
-              <span className="font-display font-bold text-lg">Golden Fortune</span>
+              <span className="font-display font-bold text-lg">GPT</span>
             </Link>
           </SidebarHeader>
           <SidebarContent>

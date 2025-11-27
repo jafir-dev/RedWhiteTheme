@@ -148,7 +148,7 @@ export default function Checkout() {
         <div className="container mx-auto px-6 h-16 flex items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2">
             <Coins className="w-6 h-6 text-primary" />
-            <span className="font-display font-bold text-xl">Golden Fortune</span>
+            <span className="font-display font-bold text-xl">GPT</span>
           </Link>
 
           <div className="flex items-center gap-4">

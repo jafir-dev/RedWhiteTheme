@@ -112,14 +112,16 @@ export default function FortuneWheel({
     <div className="flex flex-col items-center gap-8 w-full">
       {/* Spins Counter */}
       <div className="flex items-center gap-4 flex-wrap justify-center">
-        <Badge variant="secondary" className="text-lg px-4 py-2">
-          <Sparkles className="w-5 h-5 mr-2" />
-          {spinsRemaining} Spins Remaining
-        </Badge>
-        {spinsRemaining === 0 && (
-          <Button onClick={onBuySpins} data-testid="button-buy-spins">
-            Buy More Spins (Rs 10)
-          </Button>
+        {spinsRemaining > 0 ? (
+          <Badge variant="secondary" className="text-lg px-4 py-2">
+            <Sparkles className="w-5 h-5 mr-2" />
+            {spinsRemaining} Spins Remaining
+          </Badge>
+        ) : (
+          <Badge variant="secondary" className="text-lg px-4 py-2">
+            <Sparkles className="w-5 h-5 mr-2" />
+            You have already won spins
+          </Badge>
         )}
       </div>
 
@@ -154,7 +156,7 @@ export default function FortuneWheel({
 
             {/* Spin Button Text - Centered */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full bg-primary hover:bg-primary/90 disabled:bg-muted-foreground flex items-center justify-center font-display font-bold text-lg text-white drop-shadow-lg pointer-events-none">
-              {isSpinning ? "..." : "TAP"}
+              {isSpinning ? "..." : "SPIN"}
             </div>
           </button>
         </div>

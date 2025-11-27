@@ -202,14 +202,14 @@ export default function Landing() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-2">
               <Coins className="w-6 h-6 text-primary" />
-              <span className="font-display font-bold text-xl">Golden Fortune</span>
+              <span className="font-display font-bold text-xl">GPT</span>
             </div>
             <div className="flex items-center gap-6 text-sm text-muted-foreground">
               <span>Secure Payments</span>
               <span>100% Genuine Gold & Silver</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              © 2024 Golden Fortune. All rights reserved.
+              © 2024 GPT. All rights reserved.
             </p>
           </div>
         </div>
