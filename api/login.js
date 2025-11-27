@@ -1,8 +1,4 @@
-// Vercel serverless function for authentication
-const express = require('express');
-const cookieParser = require('cookie-parser');
-
-const app = express();
+// Vercel serverless function for login endpoint
 
 // Mock user database
 const mockUsers = [
@@ -24,16 +20,47 @@ const mockUsers = [
   }
 ];
 
-// Session store
+// Simple in-memory session store (for demo purposes)
+// In production, you'd use Redis or a proper session store
 const sessions = new Map();
 
-app.use(express.json());
-app.use(cookieParser());
+function generateSessionId() {
+  return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
 
-// Mock login endpoint
-app.post('/api/login', async (req, res) => {
+function validateSession(sessionId) {
+  if (!sessionId || !sessions.has(sessionId)) {
+    return null;
+  }
+
+  const session = sessions.get(sessionId);
+  const sessionAge = Date.now() - new Date(session.createdAt).getTime();
+  const maxAge = 7 * 24 * 60 * 60 * 1000; // 1 week
+
+  if (sessionAge > maxAge) {
+    sessions.delete(sessionId);
+    return null;
+  }
+
+  return session;
+}
+
+export default async function handler(req, res) {
+  // Handle CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ message: 'Method not allowed' });
+  }
+
   try {
-    const { email, password } = req.body;
+    const { email, password } = await JSON.parse(req.body);
 
     // Find user in mock database
     const mockUser = mockUsers.find(u => u.email === email && u.password === password);
@@ -43,7 +70,7 @@ app.post('/api/login', async (req, res) => {
     }
 
     // Create session
-    const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const sessionId = generateSessionId();
     const sessionData = {
       user: {
         id: mockUser.id,
@@ -58,14 +85,11 @@ app.post('/api/login', async (req, res) => {
     sessions.set(sessionId, sessionData);
 
     // Set session cookie
-    res.cookie("sessionId", sessionId, {
-      httpOnly: true,
-      secure: false,
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      sameSite: "lax"
-    });
+    const cookieValue = `sessionId=${sessionId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}`;
 
-    res.json({
+    res.setHeader('Set-Cookie', cookieValue);
+
+    return res.status(200).json({
       user: {
         id: mockUser.id,
         email: mockUser.email,
@@ -77,55 +101,7 @@ app.post('/api/login', async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Login error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
   }
-});
-
-// Mock logout endpoint
-app.post('/api/logout', (req, res) => {
-  const sessionId = req.cookies?.sessionId;
-  if (sessionId && sessions.has(sessionId)) {
-    sessions.delete(sessionId);
-  }
-
-  res.clearCookie("sessionId");
-  res.json({ success: true });
-});
-
-// Get current user endpoint
-app.get('/api/auth/user', async (req, res) => {
-  try {
-    const sessionId = req.cookies?.sessionId;
-
-    if (!sessionId || !sessions.has(sessionId)) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    const session = sessions.get(sessionId);
-
-    // Check if session is expired (7 days)
-    const sessionAge = Date.now() - new Date(session.createdAt).getTime();
-    const maxAge = 7 * 24 * 60 * 60 * 1000;
-
-    if (sessionAge > maxAge) {
-      sessions.delete(sessionId);
-      return res.status(401).json({ message: "Session expired" });
-    }
-
-    res.json({
-      id: session.user.id,
-      email: session.user.email,
-      firstName: session.user.firstName,
-      lastName: session.user.lastName,
-      isAdmin: session.user.isAdmin,
-      spinsRemaining: 0,
-      totalSpinsUsed: 0
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-module.exports = (req, res) => {
-  app(req, res);
-};
+}
