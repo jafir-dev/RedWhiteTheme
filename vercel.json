@@ -2,23 +2,10 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist/public",
   "installCommand": "npm install",
-  "functions": {
-    "api/*.js": {
-      "runtime": "nodejs18.x"
-    }
-  },
   "rewrites": [
     {
-      "source": "/api/login",
-      "destination": "/api/login.js"
-    },
-    {
-      "source": "/api/logout",
-      "destination": "/api/login.js"
-    },
-    {
-      "source": "/api/auth/user",
-      "destination": "/api/login.js"
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
     },
     {
       "source": "/(.*)",

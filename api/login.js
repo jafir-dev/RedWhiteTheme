@@ -1,4 +1,4 @@
-// Vercel serverless function for login
+// Vercel serverless function for authentication
 const express = require('express');
 const cookieParser = require('cookie-parser');
 
@@ -24,7 +24,7 @@ const mockUsers = [
   }
 ];
 
-// Session store (in production, use Redis or proper session store)
+// Session store
 const sessions = new Map();
 
 app.use(express.json());
@@ -60,8 +60,8 @@ app.post('/api/login', async (req, res) => {
     // Set session cookie
     res.cookie("sessionId", sessionId, {
       httpOnly: true,
-      secure: false, // Set to true in production with HTTPS
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
+      secure: false,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
       sameSite: "lax"
     });
 
@@ -105,7 +105,7 @@ app.get('/api/auth/user', async (req, res) => {
 
     // Check if session is expired (7 days)
     const sessionAge = Date.now() - new Date(session.createdAt).getTime();
-    const maxAge = 7 * 24 * 60 * 60 * 1000; // 1 week
+    const maxAge = 7 * 24 * 60 * 60 * 1000;
 
     if (sessionAge > maxAge) {
       sessions.delete(sessionId);
@@ -126,4 +126,6 @@ app.get('/api/auth/user', async (req, res) => {
   }
 });
 
-module.exports = app;
+module.exports = (req, res) => {
+  app(req, res);
+};
