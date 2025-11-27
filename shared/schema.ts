@@ -151,28 +151,28 @@ export const insertWheelSpinSchema = createInsertSchema(wheelSpins).omit({
 export type InsertWheelSpin = z.infer<typeof insertWheelSpinSchema>;
 export type WheelSpin = typeof wheelSpins.$inferSelect;
 
-// Loan/Customization Requests
-export const loanRequests = pgTable("loan_requests", {
+// Jewelry Customization Requests
+export const jewelryRequests = pgTable("jewelry_requests", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").notNull().references(() => users.id),
-  type: varchar("type", { length: 50 }).notNull(), // 'loan', 'customization'
+  type: varchar("type", { length: 50 }).notNull(), // 'customization', 'inquiry'
   imageUrl: text("image_url"),
   description: text("description"),
   goldWeightEstimate: real("gold_weight_estimate"),
   contactPhone: varchar("contact_phone", { length: 20 }),
-  status: varchar("status", { length: 50 }).default("pending"), // pending, contacted, completed, rejected
+  status: varchar("status", { length: 50 }).default("pending"), // pending, contacted, completed, cancelled
   adminNotes: text("admin_notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const insertLoanRequestSchema = createInsertSchema(loanRequests).omit({
+export const insertJewelryRequestSchema = createInsertSchema(jewelryRequests).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
 });
-export type InsertLoanRequest = z.infer<typeof insertLoanRequestSchema>;
-export type LoanRequest = typeof loanRequests.$inferSelect;
+export type InsertJewelryRequest = z.infer<typeof insertJewelryRequestSchema>;
+export type JewelryRequest = typeof jewelryRequests.$inferSelect;
 
 // Wheel configuration
 export const wheelConfig = pgTable("wheel_config", {
@@ -195,7 +195,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   coupons: many(coupons),
   orders: many(orders),
   wheelSpins: many(wheelSpins),
-  loanRequests: many(loanRequests),
+  jewelryRequests: many(jewelryRequests),
 }));
 
 export const couponsRelations = relations(coupons, ({ one }) => ({
@@ -239,9 +239,9 @@ export const wheelSpinsRelations = relations(wheelSpins, ({ one }) => ({
   }),
 }));
 
-export const loanRequestsRelations = relations(loanRequests, ({ one }) => ({
+export const jewelryRequestsRelations = relations(jewelryRequests, ({ one }) => ({
   user: one(users, {
-    fields: [loanRequests.userId],
+    fields: [jewelryRequests.userId],
     references: [users.id],
   }),
 }));

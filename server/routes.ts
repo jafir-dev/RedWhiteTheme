@@ -2,7 +2,7 @@ import type { Express, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./supabaseStorage";
 import { setupSupabaseAuth, isSupabaseAuthenticated } from "./supabaseAuth";
-import { insertPrizeSchema, insertProductSchema, insertLoanRequestSchema, insertOrderSchema } from "@shared/schema";
+import { insertPrizeSchema, insertProductSchema, insertJewelryRequestSchema, insertOrderSchema } from "@shared/schema";
 
 // Generate a random coupon code
 function generateCouponCode(): string {
@@ -494,26 +494,26 @@ export async function registerRoutes(
     }
   });
 
-  // ============ LOAN REQUEST ROUTES ============
+  // ============ JEWELRY REQUEST ROUTES ============
 
-  app.post("/api/loan-requests", isSupabaseAuthenticated, async (req, res) => {
+  app.post("/api/jewelry-requests", isSupabaseAuthenticated, async (req, res) => {
     try {
       const claims = getAuthUser(req);
-      const validated = insertLoanRequestSchema.parse({
+      const validated = insertJewelryRequestSchema.parse({
         ...req.body,
         userId: claims.id,
       });
-      const request = await storage.createLoanRequest(validated);
+      const request = await storage.createJewelryRequest(validated);
       res.json(request);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
   });
 
-  app.get("/api/loan-requests/user", isSupabaseAuthenticated, async (req, res) => {
+  app.get("/api/jewelry-requests/user", isSupabaseAuthenticated, async (req, res) => {
     try {
       const claims = getAuthUser(req);
-      const requests = await storage.getUserLoanRequests(claims.sub);
+      const requests = await storage.getUserJewelryRequests(claims.sub);
       res.json(requests);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -642,19 +642,19 @@ export async function registerRoutes(
     }
   });
 
-  // Admin Loan Requests
-  app.get("/api/admin/loan-requests", isSupabaseAuthenticated, isAdmin, async (req, res) => {
+  // Admin Jewelry Requests
+  app.get("/api/admin/jewelry-requests", isSupabaseAuthenticated, isAdmin, async (req, res) => {
     try {
-      const requests = await storage.getAllLoanRequests();
+      const requests = await storage.getAllJewelryRequests();
       res.json(requests);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
   });
 
-  app.patch("/api/admin/loan-requests/:id/status", isSupabaseAuthenticated, isAdmin, async (req, res) => {
+  app.patch("/api/admin/jewelry-requests/:id/status", isSupabaseAuthenticated, isAdmin, async (req, res) => {
     try {
-      const request = await storage.updateLoanRequestStatus(
+      const request = await storage.updateJewelryRequestStatus(
         parseInt(req.params.id),
         req.body.status,
         req.body.adminNotes

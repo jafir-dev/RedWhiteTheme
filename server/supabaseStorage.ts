@@ -1,5 +1,5 @@
 import { supabase } from "./lib/supabase";
-import type { User, Prize, Product, Coupon, Order, LoanRequest, WheelSpin, WheelConfig } from "@shared/schema";
+import type { User, Prize, Product, Coupon, Order, JewelryRequest, WheelSpin, WheelConfig } from "@shared/schema";
 
 export interface Storage {
   // User operations
@@ -37,11 +37,11 @@ export interface Storage {
   getAllOrders(): Promise<Order[]>;
   updateOrderStatus(id: number, status: string): Promise<Order>;
 
-  // Loan request operations
-  createLoanRequest(request: Omit<LoanRequest, "id" | "createdAt">): Promise<LoanRequest>;
-  getUserLoanRequests(userId: string): Promise<LoanRequest[]>;
-  getAllLoanRequests(): Promise<LoanRequest[]>;
-  updateLoanRequestStatus(id: number, status: string, adminNotes?: string): Promise<LoanRequest>;
+  // Jewelry request operations
+  createJewelryRequest(request: Omit<JewelryRequest, "id" | "createdAt">): Promise<JewelryRequest>;
+  getUserJewelryRequests(userId: string): Promise<JewelryRequest[]>;
+  getAllJewelryRequests(): Promise<JewelryRequest[]>;
+  updateJewelryRequestStatus(id: number, status: string, adminNotes?: string): Promise<JewelryRequest>;
 
   // Wheel operations
   createWheelSpin(spin: Omit<WheelSpin, "id" | "createdAt">): Promise<WheelSpin>;
@@ -659,9 +659,9 @@ class SupabaseStorage implements Storage {
     };
   }
 
-  async createLoanRequest(request: Omit<LoanRequest, "id" | "createdAt">): Promise<LoanRequest> {
+  async createJewelryRequest(request: Omit<JewelryRequest, "id" | "createdAt">): Promise<JewelryRequest> {
     const { data, error } = await supabase
-      .from('loan_requests')
+      .from('jewelry_requests')
       .insert({
         user_id: request.userId,
         type: request.type || 'customization',
@@ -687,13 +687,14 @@ class SupabaseStorage implements Storage {
       contactPhone: data.contact_phone,
       status: data.status,
       adminNotes: data.admin_notes,
-      createdAt: new Date(data.created_at)
+      createdAt: new Date(data.created_at),
+      updatedAt: new Date(data.updated_at)
     };
   }
 
-  async getUserLoanRequests(userId: string): Promise<LoanRequest[]> {
+  async getUserJewelryRequests(userId: string): Promise<JewelryRequest[]> {
     const { data, error } = await supabase
-      .from('loan_requests')
+      .from('jewelry_requests')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
@@ -710,13 +711,14 @@ class SupabaseStorage implements Storage {
       contactPhone: request.contact_phone,
       status: request.status,
       adminNotes: request.admin_notes,
-      createdAt: new Date(request.created_at)
+      createdAt: new Date(request.created_at),
+      updatedAt: new Date(request.updated_at)
     }));
   }
 
-  async getAllLoanRequests(): Promise<LoanRequest[]> {
+  async getAllJewelryRequests(): Promise<JewelryRequest[]> {
     const { data, error } = await supabase
-      .from('loan_requests')
+      .from('jewelry_requests')
       .select('*')
       .order('created_at', { ascending: false });
 
@@ -725,21 +727,24 @@ class SupabaseStorage implements Storage {
     return data.map(request => ({
       id: request.id,
       userId: request.user_id,
-      productId: request.product_id,
-      amount: request.amount,
-      tenureMonths: request.tenure_months,
+      type: request.type,
+      imageUrl: request.image_url,
+      description: request.description,
+      goldWeightEstimate: request.gold_weight_estimate,
+      contactPhone: request.contact_phone,
       status: request.status,
       adminNotes: request.admin_notes,
-      createdAt: new Date(request.created_at)
+      createdAt: new Date(request.created_at),
+      updatedAt: new Date(request.updated_at)
     }));
   }
 
-  async updateLoanRequestStatus(id: number, status: string, adminNotes?: string): Promise<LoanRequest> {
-    const updateData: any = { status };
+  async updateJewelryRequestStatus(id: number, status: string, adminNotes?: string): Promise<JewelryRequest> {
+    const updateData: any = { status, updated_at: new Date().toISOString() };
     if (adminNotes !== undefined) updateData.admin_notes = adminNotes;
 
     const { data, error } = await supabase
-      .from('loan_requests')
+      .from('jewelry_requests')
       .update(updateData)
       .eq('id', id)
       .select()
@@ -750,12 +755,15 @@ class SupabaseStorage implements Storage {
     return {
       id: data.id,
       userId: data.user_id,
-      productId: data.product_id,
-      amount: data.amount,
-      tenureMonths: data.tenure_months,
+      type: data.type,
+      imageUrl: data.image_url,
+      description: data.description,
+      goldWeightEstimate: data.gold_weight_estimate,
+      contactPhone: data.contact_phone,
       status: data.status,
       adminNotes: data.admin_notes,
-      createdAt: new Date(data.created_at)
+      createdAt: new Date(data.created_at),
+      updatedAt: new Date(data.updated_at)
     };
   }
 

@@ -40,7 +40,7 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const customizeFormSchema = z.object({
-  type: z.enum(["loan", "customization"]),
+  type: z.enum(["customization", "inquiry"]),
   description: z.string().min(10, "Please provide more details (at least 10 characters)"),
   goldWeightEstimate: z.string().optional(),
   contactPhone: z.string().min(10, "Please enter a valid phone number"),
@@ -80,7 +80,7 @@ export default function Customize() {
 
   const submitMutation = useMutation({
     mutationFn: async (values: CustomizeFormValues) => {
-      const res = await apiRequest("POST", "/api/loan-requests", {
+      const res = await apiRequest("POST", "/api/jewelry-requests", {
         ...values,
         goldWeightEstimate: values.goldWeightEstimate ? parseFloat(values.goldWeightEstimate) : null,
         imageUrl: uploadedImage,
