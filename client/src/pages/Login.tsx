@@ -8,61 +8,43 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Coins, Sparkles, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
   const [error, setError] = useState("");
-  const [isSignup, setIsSignup] = useState(false);
   const navigate = () => window.location.href = "/";
   const { toast } = useToast();
+  const { signIn } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
 
     try {
-      const endpoint = isSignup ? "/api/signup" : "/api/login";
-      const body = isSignup
-        ? { email, password, firstName, lastName }
-        : { email, password };
+      const { error } = await signIn(email, password);
 
-      const response = await apiRequest("POST", endpoint, body);
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        setError(errorData.message || `${isSignup ? 'Signup' : 'Login'} failed`);
+      if (error) {
+        setError(error.message || "Login failed");
         return;
       }
 
-      const data = await response.json();
+      toast({
+        title: "Welcome back!",
+        description: "Successfully logged in!",
+      });
 
-      if (isSignup) {
-        toast({
-          title: "Account created!",
-          description: data.message || "Please check your email to verify your account.",
-        });
-        setIsSignup(false);
-      } else {
-        toast({
-          title: "Welcome back!",
-          description: `Logged in as ${data.user.firstName}`,
-        });
-        navigate("/");
-      }
+      navigate("/");
     } catch (error: any) {
-      setError(error.message || `${isSignup ? 'Signup' : 'Login'} failed`);
+      setError(error.message || "Login failed");
     } finally {
       setIsLoading(false);
     }
   };
 
-  
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       {/* Background with gradient overlay */}
@@ -94,14 +76,14 @@ export default function Login() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs value={isSignup ? "signup" : "login"} onValueChange={(value) => setIsSignup(value === "signup")} className="w-full">
+            <Tabs defaultValue="user" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                <TabsTrigger value="user">User Login</TabsTrigger>
+                <TabsTrigger value="admin">Admin Login</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="login">
-                <form onSubmit={handleSubmit} className="space-y-4">
+              <TabsContent value="user">
+                <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
                     <Input
@@ -146,78 +128,68 @@ export default function Login() {
                 </form>
               </TabsContent>
 
-              <TabsContent value="signup">
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+              <TabsContent value="admin">
+                <div className="space-y-4">
+                  <Alert>
+                    <Shield className="h-4 w-4" />
+                    <AlertDescription>
+                      Use admin credentials to access the admin dashboard
+                    </AlertDescription>
+                  </Alert>
+                  <form onSubmit={handleLogin} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="firstName">First Name</Label>
+                      <Label htmlFor="admin-email">Email</Label>
                       <Input
-                        id="firstName"
-                        type="text"
-                        placeholder="First name"
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
+                        id="admin-email"
+                        type="email"
+                        placeholder="admin@gpt.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                         required
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="lastName">Last Name</Label>
+                      <Label htmlFor="admin-password">Password</Label>
                       <Input
-                        id="lastName"
-                        type="text"
-                        placeholder="Last name"
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
+                        id="admin-password"
+                        type="password"
+                        placeholder="admin123"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                         required
                       />
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="Enter your email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
-                    <Input
-                      id="signup-password"
-                      type="password"
-                      placeholder="Create a password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-                  {error && (
-                    <Alert variant="destructive">
-                      <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                  )}
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Creating account...
-                      </>
-                    ) : (
-                      "Sign Up"
+                    {error && (
+                      <Alert variant="destructive">
+                        <AlertDescription>{error}</AlertDescription>
+                      </Alert>
                     )}
-                  </Button>
-                </form>
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Logging in...
+                        </>
+                      ) : (
+                        "Admin Login"
+                      )}
+                    </Button>
+                  </form>
+                </div>
               </TabsContent>
             </Tabs>
 
-                      </CardContent>
+            {/* Sign up link */}
+            <div className="mt-6 pt-6 border-t text-center">
+              <p className="text-sm text-muted-foreground">
+                Don't have an account? Sign up to start spinning!
+              </p>
+            </div>
+          </CardContent>
         </Card>
       </div>
     </div>

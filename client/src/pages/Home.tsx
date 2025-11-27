@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
+import { useAuthQuery } from "@/hooks/useAuthQuery";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +25,8 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import type { Prize, Coupon, User } from "@shared/schema";
 
 export default function Home() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user: authUser, loading: authLoading, signOut } = useAuth();
+  const { user, isLoading: userLoading } = useAuthQuery();
   const { toast } = useToast();
   const [isSpinning, setIsSpinning] = useState(false);
 
@@ -34,6 +36,7 @@ export default function Home() {
 
   const { data: userCoupons = [], isLoading: couponsLoading } = useQuery<Coupon[]>({
     queryKey: ["/api/coupons/user"],
+    enabled: !!user,
   });
 
   const spinMutation = useMutation({
@@ -90,7 +93,7 @@ export default function Home() {
     return;
   };
 
-  if (authLoading) {
+  if (authLoading || userLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="space-y-4 text-center">
@@ -136,13 +139,13 @@ export default function Home() {
             )}
             <div className="flex items-center gap-3">
               <Avatar className="w-8 h-8">
-                <AvatarImage src={user?.profileImageUrl || undefined} className="object-cover" />
+                <AvatarImage src={user?.profileImageUrl || authUser?.user_metadata?.avatar_url || undefined} className="object-cover" />
                 <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                  {user?.firstName?.[0] || user?.email?.[0] || "U"}
+                  {user?.firstName?.[0] || authUser?.user_metadata?.name?.[0] || authUser?.email?.[0] || "U"}
                 </AvatarFallback>
               </Avatar>
               <span className="text-sm font-medium hidden sm:block" data-testid="text-user-name">
-                {user?.firstName || user?.email || "User"}
+                {user?.firstName || authUser?.user_metadata?.name || authUser?.email || "User"}
               </span>
             </div>
             <Button
@@ -150,8 +153,7 @@ export default function Home() {
               size="icon"
               onClick={async () => {
                 try {
-                  await fetch("/api/logout", { method: "POST" });
-                  window.location.href = "/login";
+                  await signOut();
                 } catch (error) {
                   console.error("Logout failed:", error);
                 }

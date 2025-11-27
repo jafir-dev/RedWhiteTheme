@@ -173,7 +173,7 @@ export async function registerRoutes(
   app.get("/api/coupons/user", isSupabaseAuthenticated, async (req, res) => {
     try {
       const claims = getAuthUser(req);
-      const coupons = await storage.getUserCoupons(claims.id);
+      const coupons = await storage.getUserCoupons(claims.sub);
       res.json(coupons);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -263,7 +263,7 @@ export async function registerRoutes(
   app.get("/api/orders/user", isSupabaseAuthenticated, async (req, res) => {
     try {
       const claims = getAuthUser(req);
-      const orders = await storage.getUserOrders(claims.id);
+      const orders = await storage.getUserOrders(claims.sub);
       res.json(orders);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -289,7 +289,7 @@ export async function registerRoutes(
   app.get("/api/loan-requests/user", isSupabaseAuthenticated, async (req, res) => {
     try {
       const claims = getAuthUser(req);
-      const requests = await storage.getUserLoanRequests(claims.id);
+      const requests = await storage.getUserLoanRequests(claims.sub);
       res.json(requests);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
