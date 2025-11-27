@@ -54,6 +54,27 @@ export default function Home() {
     },
   });
 
+  const buySpinsMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/wheel/buy-spins", { amount: 10 });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      toast({
+        title: "Success!",
+        description: "2 spins have been added to your account!",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Payment Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleSpin = async () => {
     setIsSpinning(true);
     try {
@@ -64,11 +85,14 @@ export default function Home() {
     }
   };
 
-  const handleBuySpins = () => {
-    toast({
-      title: "Payment Coming Soon",
-      description: "Stripe payment integration will be available soon!",
-    });
+  const handleBuySpins = async () => {
+    // Show payment prompt
+    const confirmed = window.confirm(
+      "Buy 2 Spins for ₹10?\n\n(This is a demo - no real payment required)"
+    );
+    if (confirmed) {
+      await buySpinsMutation.mutateAsync();
+    }
   };
 
   if (authLoading) {
@@ -223,11 +247,9 @@ export default function Home() {
                     )}
                   </div>
                 ) : (
-                  <div className="text-center py-6 text-muted-foreground">
-                    <Gift className="w-10 h-10 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">No coupons yet</p>
-                    <p className="text-xs">Spin the wheel to win!</p>
-                  </div>
+                  <p className="text-sm text-muted-foreground text-center py-8">
+                    Spin the wheel to win coupons!
+                  </p>
                 )}
               </CardContent>
             </Card>

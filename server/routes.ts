@@ -95,6 +95,34 @@ export async function registerRoutes(
 
   // ============ WHEEL SPIN ROUTES ============
 
+  app.post("/api/wheel/buy-spins", isAuthenticated, async (req, res) => {
+    try {
+      const claims = getAuthUser(req);
+      const user = await storage.getUser(claims.sub);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Mock payment processing - in real app, verify payment with Stripe/Razorpay
+      const spinsToAdd = 2;
+      await storage.updateUserSpins(
+        user.id,
+        (user.spinsRemaining || 0) + spinsToAdd,
+        user.totalSpinsUsed || 0
+      );
+
+      res.json({ 
+        success: true, 
+        message: "Spins purchased successfully",
+        spinsAdded: spinsToAdd,
+        newSpinCount: (user.spinsRemaining || 0) + spinsToAdd
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   app.post("/api/wheel/spin", isAuthenticated, async (req, res) => {
     try {
       const claims = getAuthUser(req);
