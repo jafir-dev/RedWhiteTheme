@@ -3,14 +3,14 @@ import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 
-const app = express();
-const httpServer = createServer(app);
-
 declare module "http" {
   interface IncomingMessage {
     rawBody: unknown;
   }
 }
+
+const app = express();
+const httpServer = createServer(app);
 
 app.use(
   express.json({
@@ -59,7 +59,7 @@ app.use((req, res, next) => {
   next();
 });
 
-(async () => {
+async function setupServer() {
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -80,19 +80,38 @@ app.use((req, res, next) => {
     await setupVite(httpServer, app);
   }
 
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || "5000", 10);
-  httpServer.listen(
-    {
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    },
-    () => {
-      log(`serving on port ${port}`);
-    },
-  );
-})();
+  return { app, httpServer };
+}
+
+// For Vercel serverless deployment
+let serverInstance: { app: Express; httpServer: any } | null = null;
+
+export default async function handler(req: Request, res: Response) {
+  if (!serverInstance) {
+    serverInstance = await setupServer();
+  }
+
+  // Handle the request through Express
+  serverInstance.app(req, res);
+}
+
+// For local development
+if (require.main === module) {
+  setupServer().then(() => {
+    // ALWAYS serve the app on the port specified in the environment variable PORT
+    // Other ports are firewalled. Default to 5000 if not specified.
+    // this serves both the API and the client.
+    // It is the only port that is not firewalled.
+    const port = parseInt(process.env.PORT || "5000", 10);
+    httpServer.listen(
+      {
+        port,
+        host: "0.0.0.0",
+        reusePort: true,
+      },
+      () => {
+        log(`serving on port ${port}`);
+      },
+    );
+  });
+}
