@@ -109,9 +109,9 @@ export default function FortuneWheel({
   };
 
   return (
-    <div className="flex flex-col items-center gap-8">
+    <div className="flex flex-col items-center gap-8 w-full">
       {/* Spins Counter */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 flex-wrap justify-center">
         <Badge variant="secondary" className="text-lg px-4 py-2">
           <Sparkles className="w-5 h-5 mr-2" />
           {spinsRemaining} Spins Remaining
@@ -123,88 +123,91 @@ export default function FortuneWheel({
         )}
       </div>
 
-      {/* Wheel Container */}
-      <div className="relative">
-        {/* Pointer */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 z-10">
-          <div className="w-0 h-0 border-l-[20px] border-l-transparent border-r-[20px] border-r-transparent border-t-[30px] border-t-primary drop-shadow-lg" />
-        </div>
+      {/* Wheel Container and Results Container */}
+      <div className="flex flex-col items-center gap-8 w-full">
+        <div className="relative flex justify-center">
+          {/* Pointer */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 z-40">
+            <div className="w-0 h-0 border-l-[20px] border-l-transparent border-r-[20px] border-r-transparent border-t-[30px] border-t-primary drop-shadow-lg" />
+          </div>
 
-        {/* Wheel */}
-        <div
-          ref={wheelRef}
-          className="relative w-[400px] h-[400px] transition-transform duration-[4s] ease-out"
-          style={{ transform: `rotate(${rotation}deg)` }}
-        >
-          <svg viewBox="0 0 400 400" className="w-full h-full drop-shadow-2xl">
-            <circle cx="200" cy="200" r="195" fill="#991B1B" stroke="#7F1D1D" strokeWidth="4" />
-            <circle cx="200" cy="200" r="180" fill="none" stroke="#DC2626" strokeWidth="2" />
-            {renderWheelSegments()}
-            <circle cx="200" cy="200" r="30" fill="#991B1B" stroke="#7F1D1D" strokeWidth="4" />
-            <circle cx="200" cy="200" r="20" fill="#DC2626" />
-          </svg>
-        </div>
-
-        {/* Spin Button */}
-        <Button
-          size="lg"
-          onClick={handleSpin}
-          disabled={isSpinning || spinsRemaining <= 0}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full font-display font-bold text-lg z-20"
-          data-testid="button-spin-wheel"
-        >
-          {isSpinning ? "..." : "SPIN"}
-        </Button>
-      </div>
-
-      {/* Prize Result */}
-      {showResult && wonPrize && (
-        <Card className="w-full max-w-md border-primary animate-in fade-in zoom-in duration-300">
-          <CardHeader className="text-center pb-4">
-            <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-              <Gift className="w-8 h-8 text-primary" />
+          {/* Wheel - Clickable */}
+          <button
+            onClick={handleSpin}
+            disabled={isSpinning || spinsRemaining <= 0}
+            className="relative w-[400px] h-[400px] cursor-pointer disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+            data-testid="button-wheel-tap"
+          >
+            <div
+              ref={wheelRef}
+              className="relative w-full h-full transition-transform duration-[4s] ease-out"
+              style={{ transform: `rotate(${rotation}deg)` }}
+            >
+              <svg viewBox="0 0 400 400" className="w-full h-full drop-shadow-2xl">
+                <circle cx="200" cy="200" r="195" fill="#991B1B" stroke="#7F1D1D" strokeWidth="4" />
+                <circle cx="200" cy="200" r="180" fill="none" stroke="#DC2626" strokeWidth="2" />
+                {renderWheelSegments()}
+                <circle cx="200" cy="200" r="30" fill="#991B1B" stroke="#7F1D1D" strokeWidth="4" />
+                <circle cx="200" cy="200" r="20" fill="#DC2626" />
+              </svg>
             </div>
-            <CardTitle className="font-display text-2xl">Congratulations!</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center space-y-4">
-            <p className="text-lg">You won:</p>
-            <p className="font-display font-bold text-2xl text-primary">
-              {wonPrize.prize.name}
-            </p>
-            <p className="text-muted-foreground">{wonPrize.prize.description}</p>
-            
-            <div className="bg-muted rounded-lg p-4 mt-4">
-              <p className="text-sm text-muted-foreground mb-2">Your Coupon Code:</p>
-              <div className="flex items-center justify-center gap-2">
-                <code className="text-xl font-mono font-bold tracking-wider">
-                  {wonPrize.coupon.code}
-                </code>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={copyToClipboard}
-                  data-testid="button-copy-coupon"
-                >
-                  {copied ? (
-                    <Check className="w-4 h-4 text-green-600" />
-                  ) : (
-                    <Copy className="w-4 h-4" />
-                  )}
-                </Button>
+
+            {/* Spin Button Text - Centered */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full bg-primary hover:bg-primary/90 disabled:bg-muted-foreground flex items-center justify-center font-display font-bold text-lg text-white drop-shadow-lg pointer-events-none">
+              {isSpinning ? "..." : "TAP"}
+            </div>
+          </button>
+        </div>
+
+        {/* Prize Result - Fixed at bottom */}
+        {showResult && wonPrize && (
+          <Card className="w-full max-w-md border-primary animate-in fade-in zoom-in duration-300 z-50">
+            <CardHeader className="text-center pb-4">
+              <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                <Gift className="w-8 h-8 text-primary" />
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Value: Rs {wonPrize.coupon.value}
+              <CardTitle className="font-display text-2xl">Congratulations!</CardTitle>
+            </CardHeader>
+            <CardContent className="text-center space-y-4">
+              <p className="text-lg">You won:</p>
+              <p className="font-display font-bold text-2xl text-primary">
+                {wonPrize.prize.name}
               </p>
-            </div>
-            
-            <Button className="w-full mt-4" asChild>
-              <a href="/products" data-testid="link-use-coupon">
-                Use Coupon Now
-              </a>
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+              <p className="text-muted-foreground">{wonPrize.prize.description}</p>
+              
+              <div className="bg-muted rounded-lg p-4 mt-4">
+                <p className="text-sm text-muted-foreground mb-2">Your Coupon Code:</p>
+                <div className="flex items-center justify-center gap-2">
+                  <code className="text-xl font-mono font-bold tracking-wider">
+                    {wonPrize.coupon.code}
+                  </code>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={copyToClipboard}
+                    data-testid="button-copy-coupon"
+                  >
+                    {copied ? (
+                      <Check className="w-4 h-4 text-green-600" />
+                    ) : (
+                      <Copy className="w-4 h-4" />
+                    )}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Value: Rs {wonPrize.coupon.value}
+                </p>
+              </div>
+              
+              <Button className="w-full mt-4" asChild>
+                <a href="/products" data-testid="link-use-coupon">
+                  Use Coupon Now
+                </a>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }
